@@ -1,0 +1,4 @@
+prometheus_client
+pandas
+influxdb_client
+requests

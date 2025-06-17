@@ -1,0 +1,51 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: core-collector-config
+  namespace: monitoring
+data:
+  TARGET_PORT: "55555"
+  TARGET_IP: "10.233.67.132"
+  INFLUXDB_URL: 'http://10.233.50.123:80'
+  INFLUXDB_TOKEN: 'my-super-secret-token'
+  INFLUXDB_ORG: 'influxdata'
+  INFLUXDB_BUCKET: 'metrics'
+  DELAY: '0.1'
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: core-collector
+  namespace: monitoring
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: core-collector
+  template:
+    metadata:
+      labels:
+        app: core-collector
+    spec:
+      containers:
+      - name: core-collector
+        image: frossrunner/core-collector:latest
+        command:
+          - sleep
+          - inf
+        env:
+        - name: TARGET_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: core-collector-config
+              key: TARGET_PORT
+        - name: TARGET_IP
+          valueFrom:
+            configMapKeyRef:
+              name: core-collector-config
+              key: TARGET_IP
+        - name: DELAY
+          valueFrom:
+            configMapKeyRef:
+              name: core-collector-config
+              key: DELAY
