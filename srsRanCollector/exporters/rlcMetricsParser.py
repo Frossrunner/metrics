@@ -116,7 +116,7 @@ class rlcMetricsParser:
                         .field("bin_count", bin_count) \
                         .tag("drb_key", drb_key) \
                         .tag("bin_start_usec", str(int(bin_start))) \
-                        .tag("source", "srs_rlc")
+                        .tag("component", "rlc")
                     if timestamp_dt:
                         point = point.time(timestamp_dt)
                     influx_points.append(point)
@@ -140,7 +140,7 @@ class rlcMetricsParser:
                     .field("max_bin_count", max_bin_count) \
                     .field("max_bin_start_usec", max_bin_start) \
                     .tag("drb_key", drb_key) \
-                    .tag("source", "srs_rlc")
+                    .tag("component", "rlc")
                 if timestamp_dt:
                     agg_point = agg_point.time(timestamp_dt)
                 influx_points.append(agg_point)
@@ -154,7 +154,7 @@ class rlcMetricsParser:
                                 .field(f"weighted_avg_latency_{stat_name}", stat_value) \
                                 .tag("drb_key", drb_key) \
                                 .tag("statistic", stat_name) \
-                                .tag("source", "srs_rlc")
+                                .tag("component", "rlc")
                             if timestamp_dt:
                                 stat_point = stat_point.time(timestamp_dt)
                             influx_points.append(stat_point)
@@ -184,7 +184,7 @@ class rlcMetricsParser:
                     .field("sdu_drop_rate_percent", sdu_drop_rate) \
                     .tag("drb_key", drb_key) \
                     .tag("metric_type", "drop_rate") \
-                    .tag("source", "srs_rlc")
+                    .tag("component", "rlc")
                 if timestamp_dt:
                     point = point.time(timestamp_dt)
                 influx_points.append(point)
@@ -200,7 +200,7 @@ class rlcMetricsParser:
                     .field("pdu_loss_rate_percent", pdu_loss_rate) \
                     .tag("drb_key", drb_key) \
                     .tag("metric_type", "loss_rate") \
-                    .tag("source", "srs_rlc")
+                    .tag("component", "rlc")
                 if timestamp_dt:
                     point = point.time(timestamp_dt)
                 influx_points.append(point)
@@ -213,7 +213,7 @@ class rlcMetricsParser:
                     .field("avg_sdu_latency_us", avg_sdu_latency) \
                     .tag("drb_key", drb_key) \
                     .tag("metric_type", "latency") \
-                    .tag("source", "srs_rlc")
+                    .tag("component", "rlc")
                 if timestamp_dt:
                     point = point.time(timestamp_dt)
                 influx_points.append(point)
@@ -233,7 +233,7 @@ class rlcMetricsParser:
                     .tag("drb_key", drb_key) \
                     .tag("metric_type", "size") \
                     .tag("direction", "tx") \
-                    .tag("source", "srs_rlc")
+                    .tag("component", "rlc")
                 if timestamp_dt:
                     point = point.time(timestamp_dt)
                 influx_points.append(point)
@@ -245,7 +245,7 @@ class rlcMetricsParser:
                     .tag("drb_key", drb_key) \
                     .tag("metric_type", "size") \
                     .tag("direction", "tx") \
-                    .tag("source", "srs_rlc")
+                    .tag("component", "rlc")
                 if timestamp_dt:
                     point = point.time(timestamp_dt)
                 influx_points.append(point)
@@ -257,7 +257,7 @@ class rlcMetricsParser:
                     .tag("drb_key", drb_key) \
                     .tag("metric_type", "size") \
                     .tag("direction", "rx") \
-                    .tag("source", "srs_rlc")
+                    .tag("component", "rlc")
                 if timestamp_dt:
                     point = point.time(timestamp_dt)
                 influx_points.append(point)
@@ -269,7 +269,7 @@ class rlcMetricsParser:
                     .tag("drb_key", drb_key) \
                     .tag("metric_type", "size") \
                     .tag("direction", "rx") \
-                    .tag("source", "srs_rlc")
+                    .tag("component", "rlc")
                 if timestamp_dt:
                     point = point.time(timestamp_dt)
                 influx_points.append(point)
@@ -282,7 +282,7 @@ class rlcMetricsParser:
                     .field("pdu_integrity_rate_percent", pdu_integrity_rate) \
                     .tag("drb_key", drb_key) \
                     .tag("metric_type", "integrity") \
-                    .tag("source", "srs_rlc")
+                    .tag("component", "rlc")
                 if timestamp_dt:
                     point = point.time(timestamp_dt)
                 influx_points.append(point)
@@ -356,7 +356,7 @@ class rlcMetricsParser:
                     .tag("drb_key", drb_key) \
                     .tag("alert_level", alert_level) \
                     .tag("alert_message", alert_message) \
-                    .tag("source", "srs_rlc")
+                    .tag("component", "rlc")
 
                 if timestamp_dt:
                     point = point.time(timestamp_dt)
@@ -369,7 +369,7 @@ class rlcMetricsParser:
                     .field("alert_level_numeric", 0) \
                     .tag("drb_key", drb_key) \
                     .tag("alert_level", "normal") \
-                    .tag("source", "srs_rlc")
+                    .tag("component", "rlc")
 
                 if timestamp_dt:
                     point = point.time(timestamp_dt)
@@ -406,7 +406,7 @@ class rlcMetricsParser:
                         .field(field, value) \
                         .tag("direction", direction) \
                         .tag("drb_key", drb_key) \
-                        .tag("source", "srs_rlc")
+                        .tag("component", "rlc")
                     if timestamp_dt:
                         point = point.time(timestamp_dt)
                     influx_points.append(point)
@@ -423,7 +423,7 @@ class rlcMetricsParser:
                                         .tag("drb_key", drb_key) \
                                         .tag("metric_type", field) \
                                         .tag("statistic", stat_name) \
-                                        .tag("source", "srs_rlc")
+                                        .tag("component", "rlc")
                                     if timestamp_dt:
                                         stat_point = stat_point.time(timestamp_dt)
                                     influx_points.append(stat_point)
@@ -479,7 +479,7 @@ class rlcMetricsParser:
                 .field("ue_id", ue_id) \
                 .field("drb_id", drb_id) \
                 .tag("drb_key", drb_key) \
-                .tag("source", "srs_rlc")
+                .tag("component", "rlc")
             if timestamp_dt:
                 id_point = id_point.time(timestamp_dt)
             self.exporter.write_to_influx([id_point])
@@ -506,8 +506,8 @@ class rlcMetricsParser:
                 self.calculate_rlc_derived_metrics(tx_metrics, rx_metrics, drb_key, timestamp_dt)
                 self.check_rlc_performance_thresholds(drb_key, tx_metrics, rx_metrics, timestamp_dt)
 
-            log_both(f"RLC metrics updated for {drb_key} - TX SDUs: {tx_metrics.get('num_sdus', 'N/A')}, "
-                     f"RX SDUs: {rx_metrics.get('num_sdus', 'N/A')}")
+            # log_both(f"RLC metrics updated for {drb_key} - TX SDUs: {tx_metrics.get('num_sdus', 'N/A')}, "
+            #          f"RX SDUs: {rx_metrics.get('num_sdus', 'N/A')}")
 
         except Exception as e:
             log_both(f"Error updating DRB metrics: {e}", "error")
@@ -543,11 +543,11 @@ class rlcMetricsParser:
 
             # Log missing data DRBs
             missing_data_drbs = self.active_drbs - received_drbs
-            if missing_data_drbs:
-                log_both(f"Missing data for active DRBs: {missing_data_drbs}")
+            # if missing_data_drbs:
+            #     log_both(f"Missing data for active DRBs: {missing_data_drbs}")
 
-            log_both(f"RLC metrics update complete. Active DRBs: {len(self.active_drbs)}, "
-                     f"Received data: {len(received_drbs)}, Missing data: {len(missing_data_drbs)}")
+            # log_both(f"RLC metrics update complete. Active DRBs: {len(self.active_drbs)}, "
+            #          f"Received data: {len(received_drbs)}, Missing data: {len(missing_data_drbs)}")
 
         except Exception as e:
             log_both(f"Error updating RLC metrics list: {e}", "error")
@@ -580,22 +580,22 @@ class rlcMetricsParser:
                 timestamp_val = safe_numeric(timestamp, "timestamp")
                 if timestamp_val is not None:
                     system_points.append(
-                        Point("rlc_system_metrics").field("last_update_timestamp", timestamp_val).tag("source",
-                                                                                                      "srs_rlc")
+                        Point("rlc_system_metrics").field("last_update_timestamp", timestamp_val).tag("component",
+                                                                                                      "rlc")
                     )
 
             system_points.append(
-                Point("rlc_system_metrics").field("total_messages_received", self.message_count).tag("source",
-                                                                                                     "srs_rlc")
+                Point("rlc_system_metrics").field("total_messages_received", self.message_count).tag("component",
+                                                                                                     "rlc")
             )
 
             system_points.append(
-                Point("rlc_system_metrics").field("total_parse_errors", self.parse_error_count).tag("source", "srs_rlc")
+                Point("rlc_system_metrics").field("total_parse_errors", self.parse_error_count).tag("component", "rlc")
             )
 
             # Add RLC monitoring health metrics
             system_points.append(
-                Point("rlc_system_metrics").field("active_drbs_count", len(self.active_drbs)).tag("source", "srs_rlc")
+                Point("rlc_system_metrics").field("active_drbs_count", len(self.active_drbs)).tag("component", "rlc")
             )
 
             # Count total history samples across all DRBs
@@ -605,8 +605,8 @@ class rlcMetricsParser:
             )
 
             system_points.append(
-                Point("rlc_system_metrics").field("total_history_samples", total_history_samples).tag("source",
-                                                                                                      "srs_rlc")
+                Point("rlc_system_metrics").field("total_history_samples", total_history_samples).tag("component",
+                                                                                                      "rlc")
             )
 
             # Add timestamp to system points

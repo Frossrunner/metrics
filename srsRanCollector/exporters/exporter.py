@@ -7,12 +7,14 @@ from exporters.helper_functions import log_both
 
 class exporter:
 
-    def __init__(self):
+    def __init__(self, cell_id, cell_name):
         # InfluxDB Configuration
-        self.INFLUX_URL = os.getenv("INFLUX_URL", "http://10.233.50.123:80")
+        self.INFLUX_URL = os.getenv("INFLUX_URL", "http://10.233.52.119:80")
         self.INFLUX_TOKEN = os.getenv("INFLUX_TOKEN", "my-super-secret-token")
         self.INFLUX_ORG = os.getenv("INFLUX_ORG", "influxdata")
         self.INFLUX_BUCKET = os.getenv("INFLUX_BUCKET", "metrics")
+        self.cell_id = cell_id
+        self.cell_name = cell_name
 
         try:
             self.influx_client = InfluxDBClient(url=self.INFLUX_URL, token=self.INFLUX_TOKEN, org=self.INFLUX_ORG)
@@ -30,6 +32,8 @@ class exporter:
             return
 
         try:
+            for point in points:
+                point.tag("source", "srs_ran")
             self.influx_write_api.write(bucket=self.INFLUX_BUCKET, org=self.INFLUX_ORG, record=points)
             log_both(f"Successfully wrote {len(points)} points to InfluxDB", "debug")
         except Exception as e:

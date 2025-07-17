@@ -4,7 +4,7 @@ metadata:
   name: collector-config
   namespace: monitoring
 data:
-  METRICS_ADDR: "127.0.0.1"
+  METRICS_ADDR: "0.0.0.0"
   METRICS_PORT: "55555"
   DELAY: "0.1"
 ---
@@ -14,7 +14,7 @@ metadata:
   name: collector
   namespace: monitoring
 spec:
-  replicas: 1
+  replicas: 4
   selector:
     matchLabels:
       app: collector
@@ -39,6 +39,22 @@ spec:
             configMapKeyRef:
               name: collector-config
               key: METRICS_PORT
+        - name: CELL_ID
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: CELL_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
 ---
 apiVersion: v1
 kind: Service
@@ -55,3 +71,4 @@ spec:
     port: 8000
     targetPort: 8000
     nodePort: 30800
+

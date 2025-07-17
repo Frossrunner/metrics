@@ -59,7 +59,7 @@ class ruMetricsParser:
                         .field(f"received_packets_{field}", value) \
                         .tag("pci", pci_str) \
                         .tag("direction", "ul") \
-                        .tag("source", "srs_ru")
+                        .tag("component", "ru")
                     if timestamp_dt:
                         point = point.time(timestamp_dt)
                     influx_points.append(point)
@@ -75,7 +75,7 @@ class ruMetricsParser:
                             .field(f"received_packets_{timing_type}_percent", percentage) \
                             .tag("pci", pci_str) \
                             .tag("direction", "ul") \
-                            .tag("source", "srs_ru")
+                            .tag("component", "ru")
                         if timestamp_dt:
                             point = point.time(timestamp_dt)
                         influx_points.append(point)
@@ -110,7 +110,7 @@ class ruMetricsParser:
                         .tag("pci", pci_str) \
                         .tag("direction", direction) \
                         .tag("component", component_name) \
-                        .tag("source", "srs_ru")
+                        .tag("component", "ru")
                     if timestamp_dt:
                         point = point.time(timestamp_dt)
                     influx_points.append(point)
@@ -155,7 +155,7 @@ class ruMetricsParser:
                         .tag("direction", direction) \
                         .tag("component", component_name) \
                         .tag("processing_type", processing_type) \
-                        .tag("source", "srs_ru")
+                        .tag("component", "ru")
                     if timestamp_dt:
                         point = point.time(timestamp_dt)
                     influx_points.append(point)
@@ -186,7 +186,7 @@ class ruMetricsParser:
                         .field(field, value) \
                         .tag("pci", pci_str) \
                         .tag("direction", "dl") \
-                        .tag("source", "srs_ru")
+                        .tag("component", "ru")
                     if timestamp_dt:
                         point = point.time(timestamp_dt)
                     influx_points.append(point)
@@ -376,7 +376,7 @@ class ruMetricsParser:
                 log_both(f"Unexpected RU fields: {unexpected_ru_fields}", "warning")
 
             # Write RU status metrics
-            point = Point("ru_metrics").field("active_cells_count", len(self.active_cells)).tag("source", "srs_ru")
+            point = Point("ru_metrics").field("active_cells_count", len(self.active_cells)).tag("component", "ru")
             if timestamp_dt:
                 point = point.time(timestamp_dt)
             influx_points.append(point)
@@ -423,15 +423,15 @@ class ruMetricsParser:
                 timestamp_val = safe_numeric(timestamp, "timestamp")
                 if timestamp_val is not None:
                     system_points.append(
-                        Point("ru_system_metrics").field("last_update_timestamp", timestamp_val).tag("source", "srs_ru")
+                        Point("ru_system_metrics").field("last_update_timestamp", timestamp_val).tag("component", "ru")
                     )
 
             system_points.append(
-                Point("ru_system_metrics").field("total_messages_received", self.message_count).tag("source", "srs_ru")
+                Point("ru_system_metrics").field("total_messages_received", self.message_count).tag("component", "ru")
             )
 
             system_points.append(
-                Point("ru_system_metrics").field("total_parse_errors", self.parse_error_count).tag("source", "srs_ru")
+                Point("ru_system_metrics").field("total_parse_errors", self.parse_error_count).tag("component", "ru")
             )
 
             # Add timestamp to system points

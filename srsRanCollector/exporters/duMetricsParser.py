@@ -120,8 +120,8 @@ class duMetricsParser:
                                     .field(f"{field}_layer_{i}", safe_val) \
                                     .tag("pci", pci_str) \
                                     .tag("direction", direction) \
-                                    .tag("component", component_name) \
-                                    .tag("source", "srs_du")
+                                    .tag("du_component", component_name) \
+                                    .tag("component", "du")
                                 if timestamp_dt:
                                     point = point.time(timestamp_dt)
                                 influx_points.append(point)
@@ -133,8 +133,8 @@ class duMetricsParser:
                         .field(field, value) \
                         .tag("pci", pci_str) \
                         .tag("direction", direction) \
-                        .tag("component", component_name) \
-                        .tag("source", "srs_du")
+                        .tag("du_component", component_name) \
+                        .tag("component", "du")
                     if timestamp_dt:
                         point = point.time(timestamp_dt)
                     influx_points.append(point)
@@ -168,7 +168,7 @@ class duMetricsParser:
                         .field(field, value) \
                         .tag("pci", pci_str) \
                         .tag("direction", direction) \
-                        .tag("source", "srs_du")
+                        .tag("component", "du")
                     if timestamp_dt:
                         point = point.time(timestamp_dt)
                     influx_points.append(point)
@@ -251,8 +251,8 @@ class duMetricsParser:
 
                 value = safe_numeric(cell_data.get(field), field)
                 if value is not None:
-                    point = Point("du_high_cell_metrics").field(field, value).tag("pci", pci_str).tag("source",
-                                                                                                      "srs_du")
+                    point = Point("du_high_cell_metrics").field(field, value).tag("pci", pci_str).tag("component",
+                                                                                                      "du")
                     if timestamp_dt:
                         point = point.time(timestamp_dt)
                     influx_points.append(point)
@@ -294,14 +294,13 @@ class duMetricsParser:
                 self.update_du_low_cell_metrics(cell_data, timestamp_dt)
 
             # Log missing data cells
-            missing_data_pcis = self.active_cells - received_pcis
-            if missing_data_pcis:
-                log_both(f"Missing data for active cells in DU low: {missing_data_pcis}")
-
-            log_both(
-                f"Upper PHY metrics update complete. Active cells: {len(self.active_cells)}, "
-                f"Received data: {len(received_pcis)}, Missing data: {len(missing_data_pcis)}"
-            )
+            # missing_data_pcis = self.active_cells - received_pcis
+            # if missing_data_pcis:
+            #     log_both(f"Missing data for active cells in DU low: {missing_data_pcis}")
+            # log_both(
+            #     f"Upper PHY metrics update complete. Active cells: {len(self.active_cells)}"
+            #
+            # )
 
         except Exception as e:
             log_both(f"Error updating upper PHY metrics: {e}", "error")
@@ -331,14 +330,13 @@ class duMetricsParser:
                 self.update_du_high_cell_metrics(cell_data, timestamp_dt)
 
             # Log missing data cells
-            missing_data_pcis = self.active_cells - received_pcis
-            if missing_data_pcis:
-                log_both(f"Missing data for active cells in DU high: {missing_data_pcis}")
-
-            log_both(
-                f"MAC DL metrics update complete. Active cells: {len(self.active_cells)}, "
-                f"Received data: {len(received_pcis)}, Missing data: {len(missing_data_pcis)}"
-            )
+            # missing_data_pcis = self.active_cells - received_pcis
+            # if missing_data_pcis:
+            #     log_both(f"Missing data for active cells in DU high: {missing_data_pcis}")
+            # log_both(
+            #     f"MAC DL metrics update complete. Active cells: {len(self.active_cells)}, "
+            #     f"Received data: {len(received_pcis)}, Missing data: {len(missing_data_pcis)}"
+            # )
 
         except Exception as e:
             log_both(f"Error updating MAC DL metrics: {e}", "error")
@@ -410,7 +408,7 @@ class duMetricsParser:
                 log_both(f"unexpected data with unknown fields: {du_data}", "warning")
 
             # Write DU status metrics
-            point = Point("du_metrics").field("active_cells_count", len(self.active_cells)).tag("source", "srs_du")
+            point = Point("du_metrics").field("active_cells_count", len(self.active_cells)).tag("component", "du")
             if timestamp_dt:
                 point = point.time(timestamp_dt)
             influx_points.append(point)
@@ -468,15 +466,15 @@ class duMetricsParser:
                 timestamp_val = safe_numeric(timestamp, "timestamp")
                 if timestamp_val is not None:
                     system_points.append(
-                        Point("du_system_metrics").field("last_update_timestamp", timestamp_val).tag("source", "srs_du")
+                        Point("du_system_metrics").field("last_update_timestamp", timestamp_val).tag("component", "du")
                     )
 
             system_points.append(
-                Point("du_system_metrics").field("total_messages_received", self.message_count).tag("source", "srs_du")
+                Point("du_system_metrics").field("total_messages_received", self.message_count).tag("component", "du")
             )
 
             system_points.append(
-                Point("du_system_metrics").field("total_parse_errors", self.parse_error_count).tag("source", "srs_du")
+                Point("du_system_metrics").field("total_parse_errors", self.parse_error_count).tag("component", "du")
             )
 
             # Add timestamp to system points

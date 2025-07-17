@@ -142,7 +142,7 @@ class cuUpMetricsParser:
                     .tag("direction", direction) \
                     .tag("alert_level", alert_level) \
                     .tag("alert_message", alert_message) \
-                    .tag("source", "srs_cu_up")
+                    .tag("component", "cu_up")
 
                 if timestamp_dt:
                     point = point.time(timestamp_dt)
@@ -155,7 +155,7 @@ class cuUpMetricsParser:
                     .field("alert_level_numeric", 0) \
                     .tag("direction", direction) \
                     .tag("alert_level", "normal") \
-                    .tag("source", "srs_cu_up")
+                    .tag("component", "cu_up")
 
                 if timestamp_dt:
                     point = point.time(timestamp_dt)
@@ -184,7 +184,7 @@ class cuUpMetricsParser:
                 point = Point("cu_up_pdcp_derived") \
                     .field("total_throughput_Mbps", total_throughput) \
                     .tag("metric_type", "throughput") \
-                    .tag("source", "srs_cu_up")
+                    .tag("component", "cu_up")
                 if timestamp_dt:
                     point = point.time(timestamp_dt)
                 influx_points.append(point)
@@ -195,7 +195,7 @@ class cuUpMetricsParser:
                 point = Point("cu_up_pdcp_derived") \
                     .field("throughput_asymmetry_ratio", asymmetry_ratio) \
                     .tag("metric_type", "asymmetry") \
-                    .tag("source", "srs_cu_up")
+                    .tag("component", "cu_up")
                 if timestamp_dt:
                     point = point.time(timestamp_dt)
                 influx_points.append(point)
@@ -208,7 +208,7 @@ class cuUpMetricsParser:
             point = Point("cu_up_pdcp_derived") \
                 .field("total_cpu_usage_percent", total_cpu) \
                 .tag("metric_type", "cpu") \
-                .tag("source", "srs_cu_up")
+                .tag("component", "cu_up")
             if timestamp_dt:
                 point = point.time(timestamp_dt)
             influx_points.append(point)
@@ -222,7 +222,7 @@ class cuUpMetricsParser:
                 point = Point("cu_up_pdcp_derived") \
                     .field("latency_difference_us", latency_diff) \
                     .tag("metric_type", "latency") \
-                    .tag("source", "srs_cu_up")
+                    .tag("component", "cu_up")
                 if timestamp_dt:
                     point = point.time(timestamp_dt)
                 influx_points.append(point)
@@ -234,7 +234,7 @@ class cuUpMetricsParser:
                     .field("dl_efficiency_mbps_per_cpu_percent", dl_efficiency) \
                     .tag("metric_type", "efficiency") \
                     .tag("direction", "dl") \
-                    .tag("source", "srs_cu_up")
+                    .tag("component", "cu_up")
                 if timestamp_dt:
                     point = point.time(timestamp_dt)
                 influx_points.append(point)
@@ -245,7 +245,7 @@ class cuUpMetricsParser:
                     .field("ul_efficiency_mbps_per_cpu_percent", ul_efficiency) \
                     .tag("metric_type", "efficiency") \
                     .tag("direction", "ul") \
-                    .tag("source", "srs_cu_up")
+                    .tag("component", "cu_up")
                 if timestamp_dt:
                     point = point.time(timestamp_dt)
                 influx_points.append(point)
@@ -274,7 +274,7 @@ class cuUpMetricsParser:
                     point = Point("cu_up_pdcp_metrics") \
                         .field(field, value) \
                         .tag("direction", direction) \
-                        .tag("source", "srs_cu_up")
+                        .tag("component", "cu_up")
                     if timestamp_dt:
                         point = point.time(timestamp_dt)
                     influx_points.append(point)
@@ -289,7 +289,7 @@ class cuUpMetricsParser:
                                     .tag("direction", direction) \
                                     .tag("metric_type", field) \
                                     .tag("statistic", stat_name) \
-                                    .tag("source", "srs_cu_up")
+                                    .tag("component", "cu_up")
                                 if timestamp_dt:
                                     stat_point = stat_point.time(timestamp_dt)
                                 influx_points.append(stat_point)
@@ -369,7 +369,7 @@ class cuUpMetricsParser:
                 .field("pdcp_dl_active", 1 if has_dl else 0) \
                 .field("pdcp_ul_active", 1 if has_ul else 0) \
                 .field("pdcp_fully_active", 1 if (has_dl and has_ul) else 0) \
-                .tag("source", "srs_cu_up")
+                .tag("component", "cu_up")
             if timestamp_dt:
                 point = point.time(timestamp_dt)
             influx_points.append(point)
@@ -413,18 +413,18 @@ class cuUpMetricsParser:
                 timestamp_val = safe_numeric(timestamp, "timestamp")
                 if timestamp_val is not None:
                     system_points.append(
-                        Point("cu_up_system_metrics").field("last_update_timestamp", timestamp_val).tag("source",
-                                                                                                        "srs_cu_up")
+                        Point("cu_up_system_metrics").field("last_update_timestamp", timestamp_val).tag("component",
+                                                                                                        "cu_up")
                     )
 
             system_points.append(
-                Point("cu_up_system_metrics").field("total_messages_received", self.message_count).tag("source",
-                                                                                                       "srs_cu_up")
+                Point("cu_up_system_metrics").field("total_messages_received", self.message_count).tag("component",
+                                                                                                       "cu_up")
             )
 
             system_points.append(
-                Point("cu_up_system_metrics").field("total_parse_errors", self.parse_error_count).tag("source",
-                                                                                                      "srs_cu_up")
+                Point("cu_up_system_metrics").field("total_parse_errors", self.parse_error_count).tag("component",
+                                                                                                      "cu_up")
             )
 
             # Add PDCP monitoring health metrics
@@ -432,11 +432,11 @@ class cuUpMetricsParser:
             ul_samples = len(self.pdcp_performance_history.get('ul', {}).get('average_latency_us', []))
 
             system_points.append(
-                Point("cu_up_system_metrics").field("pdcp_dl_history_samples", dl_samples).tag("source", "srs_cu_up")
+                Point("cu_up_system_metrics").field("pdcp_dl_history_samples", dl_samples).tag("component", "cu_up")
             )
 
             system_points.append(
-                Point("cu_up_system_metrics").field("pdcp_ul_history_samples", ul_samples).tag("source", "srs_cu_up")
+                Point("cu_up_system_metrics").field("pdcp_ul_history_samples", ul_samples).tag("component", "cu_up")
             )
 
             # Add timestamp to system points

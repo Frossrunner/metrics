@@ -1,0 +1,70 @@
+# Service for collector-0
+apiVersion: v1
+kind: Service
+metadata:
+  name: collector-0-service
+  namespace: monitoring
+spec:
+  type: NodePort
+  selector:
+    app: collector-0
+  ports:
+    - name: http
+      protocol: TCP
+      port: 55555
+      targetPort: 55555
+      nodePort: 30800
+
+---
+# Service for collector-1
+apiVersion: v1
+kind: Service
+metadata:
+  name: collector-1-service
+  namespace: monitoring
+spec:
+  type: NodePort
+  selector:
+    app: collector-1
+  ports:
+    - name: http
+      protocol: TCP
+      port: 55555
+      targetPort: 55555
+      nodePort: 30801
+
+---
+# Service for collector-2
+apiVersion: v1
+kind: Service
+metadata:
+  name: collector-2-service
+  namespace: monitoring
+spec:
+  type: NodePort
+  selector:
+    app: collector-2
+  ports:
+    - name: http
+      protocol: TCP
+      port: 55555
+      targetPort: 55555
+      nodePort: 30802
+
+---
+# Service for collector-3
+apiVersion: v1
+kind: Service
+metadata:
+  name: collector-3-service
+  namespace: monitoring
+spec:
+  type: NodePort
+  selector:
+    app: collector-3
+  ports:
+    - name: http
+      protocol: TCP
+      port: 55555
+      targetPort: 55555
+      nodePort: 30803

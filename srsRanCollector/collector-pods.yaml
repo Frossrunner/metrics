@@ -1,0 +1,186 @@
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: collector-config
+  namespace: monitoring
+data:
+  METRICS_ADDR: "0.0.0.0"
+  METRICS_PORT: "55555"
+  DELAY: "0.1"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: collector-0
+  namespace: monitoring
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: collector-0
+  template:
+    metadata:
+      labels:
+        app: collector-0
+    spec:
+      containers:
+      - name: collector
+        image: frossrunner/collector-exporter:latest
+        ports:
+        - containerPort: 8000
+        env:
+        - name: METRICS_ADDR
+          valueFrom:
+            configMapKeyRef:
+              name: collector-config
+              key: METRICS_ADDR
+        - name: METRICS_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: collector-config
+              key: METRICS_PORT
+        - name: CELL_ID
+          value: "collector-0"
+        - name: CELL_NAME
+          value: "collector-0"
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: collector-1
+  namespace: monitoring
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: collector-1
+  template:
+    metadata:
+      labels:
+        app: collector-1
+    spec:
+      containers:
+      - name: collector
+        image: frossrunner/collector-exporter:latest
+        ports:
+        - containerPort: 8000
+        env:
+        - name: METRICS_ADDR
+          valueFrom:
+            configMapKeyRef:
+              name: collector-config
+              key: METRICS_ADDR
+        - name: METRICS_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: collector-config
+              key: METRICS_PORT
+        - name: CELL_ID
+          value: "collector-1"
+        - name: CELL_NAME
+          value: "collector-1"
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: collector-2
+  namespace: monitoring
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: collector-2
+  template:
+    metadata:
+      labels:
+        app: collector-2
+    spec:
+      containers:
+      - name: collector
+        image: frossrunner/collector-exporter:latest
+        ports:
+        - containerPort: 8000
+        env:
+        - name: METRICS_ADDR
+          valueFrom:
+            configMapKeyRef:
+              name: collector-config
+              key: METRICS_ADDR
+        - name: METRICS_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: collector-config
+              key: METRICS_PORT
+        - name: CELL_ID
+          value: "collector-2"
+        - name: CELL_NAME
+          value: "collector-2"
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: collector-3
+  namespace: monitoring
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: collector-3
+  template:
+    metadata:
+      labels:
+        app: collector-3
+    spec:
+      containers:
+      - name: collector
+        image: frossrunner/collector-exporter:latest
+        ports:
+        - containerPort: 8000
+        env:
+        - name: METRICS_ADDR
+          valueFrom:
+            configMapKeyRef:
+              name: collector-config
+              key: METRICS_ADDR
+        - name: METRICS_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: collector-config
+              key: METRICS_PORT
+        - name: CELL_ID
+          value: "collector-3"
+        - name: CELL_NAME
+          value: "collector-3"
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
