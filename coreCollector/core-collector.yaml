@@ -4,13 +4,28 @@ metadata:
   name: core-collector-config
   namespace: monitoring
 data:
-  TARGET_PORT: "55555"
-  TARGET_IP: "10.233.67.132"
-  INFLUXDB_URL: 'http://10.233.50.123:80'
+  INFLUXDB_URL: 'http://10.233.52.119:80'
   INFLUXDB_TOKEN: 'my-super-secret-token'
   INFLUXDB_ORG: 'influxdata'
   INFLUXDB_BUCKET: 'metrics'
-  DELAY: '0.1'
+  SCRAPE_INTERVAL: '0.1'
+  SCRAPE_TIMEOUT: '1'
+  ENDPOINTS:
+    - name: upf
+      url: http://10.0.0.1:9097/metrics?fallback_scrape_protocol=text/plain
+      component: upf
+
+    - name: pcf
+      url: http://10.0.0.1:9103/metrics
+      component: pcf
+
+    - name: amf
+      url: http://10.0.0.1:9095/metrics
+      component: amf
+
+    - name: smf
+      url: http://10.0.0.1:9094/metrics
+      component: smf
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -49,3 +64,8 @@ spec:
             configMapKeyRef:
               name: core-collector-config
               key: DELAY
+        - name: ENDPOINTS
+          valueFrom:
+            configMapKeyRef:
+              name: core-collector-config
+              key: ENDPOINTS
