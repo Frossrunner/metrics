@@ -70,7 +70,7 @@ Metrics are stored in InfluxDB with the following structure:
 
 - **Measurement**: Component name (e.g., "upf", "amf", "smf", "pcf")
 - **Tags**: 
-  - `metric_name`: Original Prometheus metric name
+  - `_measurement`: Original Prometheus metric name
   - `source`: Always "core" for core network metrics
 - **Fields**:
   - `value`: Metric value (float)
