@@ -12,9 +12,12 @@ class imeisvParser:
 
     Maintains bidirectional mappings between IMEISV and RNTI values,
     tracks UE handovers, and provides mapping history for analytics.
+
+    MODIFIED: active_imeisvs now only removed when no RNTIs associated (no timeout)
     """
 
-    def __init__(self, main_exporter: exporter, mapping_timeout_seconds: int = 300):
+    def __init__(self, main_exporter: exporter, mapping_timeout_seconds: int = 300,
+                 imeisv_persistent_mode: bool = True):
         self.exporter = main_exporter
 
         # Core mapping storage
@@ -32,9 +35,11 @@ class imeisvParser:
         self.new_ue_detected = 0
         self.mapping_timeouts = 0
         self.parse_error_count = 0
+        self.imeisv_removed_no_rnti = 0  # NEW: track removals due to no RNTIs
 
         # Configuration
         self.mapping_timeout_seconds = mapping_timeout_seconds
+        self.imeisv_persistent_mode = imeisv_persistent_mode  # NEW: enable persistent mode
 
         # Active tracking
         self.active_imeisvs: Set[int] = set()
@@ -81,6 +86,9 @@ class imeisvParser:
         self.rnti_to_imeisv[new_rnti] = imeisv
         self.last_mapping_update[imeisv] = timestamp_dt
 
+        # Ensure IMEISV is in active set (for handovers)
+        self.active_imeisvs.add(imeisv)
+
         # Add to history
         self.imeisv_rnti_history[imeisv].append((new_rnti, timestamp_dt))
 
@@ -94,6 +102,100 @@ class imeisvParser:
         self._write_mapping_event(imeisv, new_rnti, old_rnti, is_handover, timestamp_dt)
 
         return is_handover
+
+    def remove_rnti_mapping(self, rnti: int, reason: str = "explicit_removal") -> Optional[int]:
+        """
+        NEW METHOD: Remove a specific RNTI mapping and check if IMEISV should be removed.
+
+        Args:
+            rnti: The RNTI to remove
+            reason: Reason for removal (for logging)
+
+        Returns:
+            The IMEISV that was associated with this RNTI, or None if not found
+        """
+        if rnti not in self.rnti_to_imeisv:
+            return None
+
+        imeisv = self.rnti_to_imeisv[rnti]
+
+        # Remove the RNTI mapping
+        del self.rnti_to_imeisv[rnti]
+
+        # If this was the current RNTI for this IMEISV, remove that mapping too
+        if imeisv in self.imeisv_to_rnti and self.imeisv_to_rnti[imeisv] == rnti:
+            del self.imeisv_to_rnti[imeisv]
+
+        # In persistent mode, only remove IMEISV if no other RNTIs map to it
+        if self.imeisv_persistent_mode:
+            # Check if any other RNTIs still map to this IMEISV
+            other_rntis = [r for r, i in self.rnti_to_imeisv.items() if i == imeisv]
+
+            if not other_rntis:
+                # No other RNTIs for this IMEISV, safe to remove
+                self.active_imeisvs.discard(imeisv)
+                if imeisv in self.last_mapping_update:
+                    del self.last_mapping_update[imeisv]
+                self.imeisv_removed_no_rnti += 1
+
+                log_both(f"IMEISV {imeisv} removed from active set - no associated RNTIs (reason: {reason})")
+
+                # Write removal event to InfluxDB
+                self._write_imeisv_removal_event(imeisv, reason)
+            else:
+                log_both(f"IMEISV {imeisv} still has {len(other_rntis)} other RNTIs after removing RNTI {rnti}")
+        else:
+            # Non-persistent mode: remove IMEISV immediately
+            self.active_imeisvs.discard(imeisv)
+            if imeisv in self.last_mapping_update:
+                del self.last_mapping_update[imeisv]
+
+        return imeisv
+
+    def _write_imeisv_removal_event(self, imeisv: int, reason: str):
+        """Write IMEISV removal event to InfluxDB."""
+        point = (Point("imeisv_mapping")
+                 .field("removal_event", 1)
+                 .tag("imeisv", str(imeisv))
+                 .tag("event_type", "imeisv_removed")
+                 .tag("reason", reason)
+                 .tag("component", "imeisv_mapper")
+                 .time(datetime.utcnow()))
+
+        self.exporter.write_to_influx([point])
+
+    def check_mapping_timeouts(self, current_time: Optional[datetime] = None) -> int:
+        """
+        MODIFIED: Remove stale mappings, but respect persistent mode for active_imeisvs.
+
+        In persistent mode: Only removes RNTI mappings, not IMEISVs unless no RNTIs remain.
+        """
+        if current_time is None:
+            current_time = datetime.utcnow()
+
+        timeout_threshold = timedelta(seconds=self.mapping_timeout_seconds)
+        timed_out_imeisvs = []
+
+        # Find timed out mappings
+        for imeisv, last_update in self.last_mapping_update.items():
+            if current_time - last_update > timeout_threshold:
+                timed_out_imeisvs.append(imeisv)
+
+        # Remove timed out mappings
+        removed_count = 0
+        for imeisv in timed_out_imeisvs:
+            old_rnti = self.imeisv_to_rnti.get(imeisv)
+
+            if old_rnti:
+                # Remove this specific RNTI mapping
+                removed_imeisv = self.remove_rnti_mapping(old_rnti, "timeout")
+                if removed_imeisv:
+                    removed_count += 1
+                    self.mapping_timeouts += 1
+                    log_both(
+                        f"Mapping timeout: IMEISV {imeisv} (RNTI {old_rnti}) removed after {self.mapping_timeout_seconds}s")
+
+        return removed_count
 
     def _write_mapping_event(self, imeisv: int, new_rnti: int, old_rnti: Optional[int],
                              is_handover: bool, timestamp_dt: datetime):
@@ -118,16 +220,25 @@ class imeisvParser:
 
         # Statistics
         stats_points = [
-            Point("imeisv_stats").field("_measurement", "imeisv_event").field("total_mappings", self.mapping_updates).tag("component", "imeisv_mapper").time(
+            Point("imeisv_stats").field("_measurement", "imeisv_event").field("total_mappings",
+                                                                              self.mapping_updates).tag("component",
+                                                                                                        "imeisv_mapper").time(
                 timestamp_dt),
-            Point("imeisv_stats").field("_measurement", "imeisv_event").field("total_handovers", self.handover_detected).tag("component",
-                                                                                       "imeisv_mapper").time(
+            Point("imeisv_stats").field("_measurement", "imeisv_event").field("total_handovers",
+                                                                              self.handover_detected).tag("component",
+                                                                                                          "imeisv_mapper").time(
                 timestamp_dt),
-            Point("imeisv_stats").field("_measurement", "imeisv_event").field("total_new_ues", self.new_ue_detected).tag("component", "imeisv_mapper").time(
+            Point("imeisv_stats").field("_measurement", "imeisv_event").field("total_new_ues",
+                                                                              self.new_ue_detected).tag("component",
+                                                                                                        "imeisv_mapper").time(
                 timestamp_dt),
-            Point("imeisv_stats").field("_measurement", "imeisv_event").field("active_imeisvs", len(self.active_imeisvs)).tag("component",
-                                                                                        "imeisv_mapper").time(
-                timestamp_dt)
+            Point("imeisv_stats").field("_measurement", "imeisv_event").field("active_imeisvs",
+                                                                              len(self.active_imeisvs)).tag("component",
+                                                                                                            "imeisv_mapper").time(
+                timestamp_dt),
+            Point("imeisv_stats").field("_measurement", "imeisv_event").field("imeisv_removed_no_rnti",
+                                                                              self.imeisv_removed_no_rnti).tag(
+                "component", "imeisv_mapper").time(timestamp_dt)
         ]
 
         influx_points.extend(stats_points)
@@ -148,56 +259,9 @@ class imeisvParser:
 
         return (datetime.utcnow() - self.last_mapping_update[imeisv]).total_seconds()
 
-    def check_mapping_timeouts(self, current_time: Optional[datetime] = None) -> int:
-        """Remove stale mappings and return count of removed mappings."""
-        if current_time is None:
-            current_time = datetime.utcnow()
-
-        timeout_threshold = timedelta(seconds=self.mapping_timeout_seconds)
-        timed_out_imeisvs = []
-
-        # Find timed out mappings
-        for imeisv, last_update in self.last_mapping_update.items():
-            if current_time - last_update > timeout_threshold:
-                timed_out_imeisvs.append(imeisv)
-
-        # Remove timed out mappings
-        influx_points = []
-        for imeisv in timed_out_imeisvs:
-            old_rnti = self.imeisv_to_rnti.get(imeisv)
-
-            # Clean up mappings
-            if imeisv in self.imeisv_to_rnti:
-                del self.imeisv_to_rnti[imeisv]
-            if old_rnti and old_rnti in self.rnti_to_imeisv:
-                del self.rnti_to_imeisv[old_rnti]
-            if imeisv in self.last_mapping_update:
-                del self.last_mapping_update[imeisv]
-            if imeisv in self.active_imeisvs:
-                self.active_imeisvs.remove(imeisv)
-
-            self.mapping_timeouts += 1
-
-            log_both(
-                f"Mapping timeout: IMEISV {imeisv} (RNTI {old_rnti}) removed after {self.mapping_timeout_seconds}s")
-
-            # Write timeout event
-            point = (Point("imeisv_mapping")
-                     .field("timeout_event", 1)
-                     .tag("imeisv", str(imeisv))
-                     .tag("event_type", "timeout")
-                     .tag("component", "imeisv_mapper")
-                     .time(current_time))
-
-            if old_rnti:
-                point = point.tag("old_rnti", str(old_rnti))
-
-            influx_points.append(point)
-
-        if influx_points:
-            self.exporter.write_to_influx(influx_points)
-
-        return len(timed_out_imeisvs)
+    def get_active_rntis_for_imeisv(self, imeisv: int) -> list:
+        """NEW METHOD: Get all RNTIs currently associated with an IMEISV."""
+        return [rnti for rnti, mapped_imeisv in self.rnti_to_imeisv.items() if mapped_imeisv == imeisv]
 
     def update_metrics(self, entry: Dict[str, Any]):
         """Main entry point for processing IMEISV mapping messages."""
@@ -209,10 +273,10 @@ class imeisvParser:
             timestamp_dt = timestamp_to_influx_time(timestamp)
             current_time = timestamp_dt or datetime.utcnow()
 
-            # Check for timeouts first
+            # Check for timeouts (now respects persistent mode)
             timeout_count = self.check_mapping_timeouts(current_time)
             if timeout_count > 0:
-                log_both(f"Removed {timeout_count} timed-out IMEISV mappings")
+                log_both(f"Processed {timeout_count} timed-out IMEISV mappings")
 
             # Extract required fields
             imeisv = entry.get("imeisv")
@@ -320,10 +384,12 @@ class imeisvParser:
             "handover_detected": self.handover_detected,
             "new_ue_detected": self.new_ue_detected,
             "mapping_timeouts": self.mapping_timeouts,
+            "imeisv_removed_no_rnti": self.imeisv_removed_no_rnti,  # NEW
             "parse_error_count": self.parse_error_count,
             "active_mappings": len(self.imeisv_to_rnti),
             "active_imeisvs": len(self.active_imeisvs),
-            "mapping_timeout_seconds": self.mapping_timeout_seconds
+            "mapping_timeout_seconds": self.mapping_timeout_seconds,
+            "imeisv_persistent_mode": self.imeisv_persistent_mode  # NEW
         }
 
     def get_all_mappings(self) -> Dict[str, Dict[str, Any]]:
@@ -337,12 +403,18 @@ class imeisvParser:
             if last_update:
                 age_seconds = (current_time - last_update).total_seconds()
 
+            # Get all RNTIs for this IMEISV
+            all_rntis = self.get_active_rntis_for_imeisv(imeisv)
+
             result[str(imeisv)] = {
-                "rnti": rnti,
+                "current_rnti": rnti,
+                "all_rntis": all_rntis,
+                "rnti_count": len(all_rntis),
                 "last_update": last_update.isoformat() if last_update else None,
                 "age_seconds": age_seconds,
                 "handover_count": len(self.imeisv_rnti_history.get(imeisv, [])),
-                "is_stale": age_seconds > self.mapping_timeout_seconds if age_seconds else False
+                "is_stale": age_seconds > self.mapping_timeout_seconds if age_seconds else False,
+                "is_active": imeisv in self.active_imeisvs
             }
 
         return result
