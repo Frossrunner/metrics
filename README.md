@@ -132,3 +132,7 @@ sudo systemctl status telegraf
 - Check Telegraf logs: `sudo journalctl -u telegraf -f`
 - Verify SNMP connectivity: `snmpwalk -v2c -c <community> <switch_ip> 1.3.6.1.2.1.1`
 - Test specific OIDs: `snmpget -v2c -c <community> <switch_ip> <oid>`
+
+### Future TODO
+- make influx run as a service
+- add the influx credentials as a config map to the yaml for easy updating
